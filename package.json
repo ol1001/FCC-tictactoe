@@ -1,0 +1,14 @@
+{
+  "name": "tictactoe-tdd",
+  "version": "1.0.0",
+  "description": "Tic Tac Toe game with TDD usage",
+  "main": "index.html",
+  "devDependencies": {
+    "babel-cli": "^6.9.0"
+  },
+  "scripts": {
+    "build": "babel js/src --out-file js/bundle.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

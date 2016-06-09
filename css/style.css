@@ -1,0 +1,39 @@
+.game-wrapper {
+    text-align: center;
+    font-family: 'Average Sans', sans-serif;
+    color: #526257;
+}
+.game-user {
+    background: none;
+    border: none;
+    text-decoration: none;
+    font-size: 1.2em;
+    color: #526257;
+}
+.game-user:hover {
+    cursor: pointer;
+}
+.game-board {
+    width: 360px;
+    height: 360px;
+    margin: 36px auto;
+}
+.game-board-table {
+    outline: 1px solid #A2BD8A;
+    outline-offset: 4px;
+}
+.table-cell {
+    margin: 2px;
+    width: 120px;
+    height: 120px;
+    cursor: pointer;
+    font-size: 36px;
+    line-height: 120px;
+    text-align: center;
+
+    background-color: #A2BD8A;
+    border-radius: 6px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+
+}
