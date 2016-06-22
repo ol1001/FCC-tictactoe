@@ -3,12 +3,12 @@ $(document).ready(function () {
     game.init();
 
     $('.game-user').click(function () {
-        game.players(this.id);
+        game.setPlayers(this.id);
         $('.choose-user').hide(250);
     });
 
     $('.table-cell').click(function () {
-        $(this).text(game.human.name);
-        game.play(game.human.name,this.id);
+        $(this).text(game.getHuman());
+        game.play(this.id);
     });
 });
