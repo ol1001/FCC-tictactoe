@@ -4,61 +4,47 @@ var Game = function () {
         [0, 3, 6], [1, 4, 7], [2, 5, 8],
         [0, 4, 8], [2, 4, 6]
     ];
-    var human = Object.create(Player);
-    var computer = Object.create(Computer);
     var board = Object.create(Board);
-    var cells = board.createCells(winningCombinations);
+    var cellsWeight = board.createCells(winningCombinations);
 
     this.init = function () {
         board.render($('.game-board'));
     };
+    var human = Object.create(Player),
+        computer = Object.create(Player);
 
     this.setPlayers = function (choosenSymbol) {
-        human.init(choosenSymbol);
-        computer.init(human.name);
-        //console.log("h: " + human.name + " , " + "c: " + computer.name);
+        human.init(choosenSymbol, winningCombinations, "human");
+        computer.init((choosenSymbol == "x") ? "o" : "x", winningCombinations, "computer");
     };
-
     this.getHuman = function () {
         return human.name;
     };
-
     this.getComputer = function () {
         return computer.name;
     };
-
-    this.play = function (cell) {
+    this.play = function (cellId) {
         if (human.name != undefined) {
-            cells[cell].state = human.name;
-            human.shot(cell);
-            human.hit(cell, winningCombinations,human.name, computer.hits);
 
+            human.shot(cellId, computer.progress);
+            $('#' + computer.shot(computer.analyze(human.progress, cellsWeight), human.progress)).text(computer.name);
+            console.log(JSON.stringify(computer.progress));
 
-            //console.log(JSON.stringify(cells));
-            //console.log(human.progress);
-            //console.log(JSON.stringify(human.hits));
-
-            if (checkWin(human.hits)) {
-                alert("Finish");
-            } else {
-                console.log("comp shot");
-                $('#' + computer.shot(human.hits, computer.name)).text(computer.name);
-            }
         } else {
-            alert("Please choose the symbol");
+            alert("Choose the symbol");
         }
-    };
-
-
-    function checkWin(hitsInCombination) {
-        var finish = false;
-        /*hitsInCombination.forEach(function (hit) {
-            if (hit.count == 3) {
-                finish = true;
-            }
-        });*/
-        return finish;
     }
 
 };
-
+/*
+ function checkWin(hitsInCombination) {
+ var finish = false;
+ hitsInCombination.forEach(function (hit) {
+ if (hit.count == 3) {
+ finish = true;
+ }
+ });
+ return finish;
+ }
+ };
+ */

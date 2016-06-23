@@ -1,5 +1,4 @@
-var Cell = function (id, state, weight) {
+var Cell = function (id, weight) {
     this.id = id;
-    this.state = state;
     this.weight = weight;
 };

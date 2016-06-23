@@ -30,7 +30,7 @@ var Board = {
         }
 
         for (var i = 0, cells = []; i < 9; i++) {
-            cells.push(new Cell(i, "not-clicked", cellWeight(i)));
+            cells.push(new Cell(i, cellWeight(i)));
         }
         return cells;
     }
