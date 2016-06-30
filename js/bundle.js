@@ -29,106 +29,79 @@ var Board = {
         }
 
         for (var i = 0, cells = []; i < 9; i++) {
-            cells.push(new Cell(i, "not-clicked", cellWeight(i)));
+            cells.push(new Cell(i, cellWeight(i)));
         }
         return cells;
     }
 };
-var Cell = function (id, state, weight) {
+var Cell = function (id, weight) {
     this.id = id;
-    this.state = state;
     this.weight = weight;
 };
 var Game = function () {
-    var winningCombinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-    this.human = Object.create(Player);
-    this.computer = Object.create(Player);
-    this.board = Object.create(Board);
-
-    var cells = this.board.createCells(winningCombinations);
+    var winningCombinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]],
+        activeCells = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    var board = Object.create(Board);
+    var cells = board.createCells(winningCombinations);
 
     this.init = function () {
-        this.board.render($('.game-board'));
+        board.render($('.game-board'));
     };
+    var human = Object.create(Player),
+        computer = Object.create(Player);
 
-    this.players = function (choosenSymbol) {
-        this.human.name = choosenSymbol;
-        this.computer.name = choosenSymbol == "x" ? "o" : "x";
+    this.setPlayers = function (choosenSymbol) {
+        human.init(choosenSymbol, winningCombinations, "human");
+        computer.init(choosenSymbol == "x" ? "o" : "x", winningCombinations, "computer");
     };
-
-    this.play = function (player, cell) {
-        if (player != undefined) {
-            cells[cell].state = player;
-
-            var playerProgress = this.human.shot(cell);
-            console.log(playerProgress);
-            var playerHits = analyzePlayerShots(playerProgress);
-
-            if (checkWin(playerHits)) {
-                alert("Finish");
+    this.getHuman = function () {
+        return human.name;
+    };
+    this.getComputer = function () {
+        return computer.name;
+    };
+    this.play = function (cellId) {
+        if (human.name != undefined) {
+            human.shot(cellId, computer.progress);
+            updateActiveCells(cellId);
+            if (isWin(human.progress, human.name) || activeCells.length == 0) {
+                location.reload();
             } else {
-                $('#' + computerShot(playerHits, this.computer.name)).text(this.computer.name);
+                var computerChoice = computer.shot(computer.analyze(human.progress, cells), human.progress);
+                $('#' + computerChoice).text(computer.name);
+                updateActiveCells(computerChoice);
+                if (isWin(computer.progress, computer.name) || activeCells.length == 0) {
+                    location.reload();
+                }
             }
         } else {
-            alert("Please choose the player");
+            alert("Choose the symbol");
         }
     };
 
-    function checkWin(hitsInCombination) {
+    function isWin(progress, player) {
         var finish = false;
-        hitsInCombination.forEach(function (hit) {
-            if (hit.count == 3) {
+        progress.forEach(function (progressCombination) {
+            var count = 0;
+            var combination = progressCombination.combination;
+            for (var key in combination) {
+                if (combination[key] == player) {
+                    count++;
+                }
+            }
+            if (count == 3) {
+                alert(player + " is won!");
                 finish = true;
             }
         });
         return finish;
     }
 
-    function analyzePlayerShots(playerProgress) {
-        var hitsInCombination = [];
-        winningCombinations.forEach(function (combination) {
-            var count = 0;
-            playerProgress.forEach(function (value) {
-                if (combination.indexOf(value) >= 0) {
-                    return count++;
-                }
-            });
-            if (count > 0) {
-                hitsInCombination.push({ count: count, combination: combination });
-            }
-        });
-        return hitsInCombination;
-    }
-
-    function computerShot(hitsInCombination, computerName) {
-        var potentialShots = [];
-
-        for (var i = 0; i < hitsInCombination.length; i++) {
-            if (hitsInCombination[i].count == 2) {
-                var freeCell = hitsInCombination[i].combination.filter(checkIsFree);
-                cells[freeCell].state = computerName;
-                winningCombinations.splice(winningCombinations.indexOf(hitsInCombination[i].combination), 1);
-                return freeCell;
-            }
-            var freeCells = hitsInCombination[i].combination.filter(checkIsFree);
-            freeCells.forEach(function (freeCell) {
-                potentialShots.push({ id: cells[freeCell].id, weight: cells[freeCell].weight });
-            });
+    function updateActiveCells(cellId) {
+        var i = activeCells.indexOf(Number(cellId));
+        if (i != -1) {
+            activeCells.splice(i, 1);
         }
-        var shotId = detectShotWithMaxWeight(potentialShots);
-        cells[shotId].state = computerName;
-        return shotId;
-    }
-
-    function checkIsFree(cell) {
-        if (cells[cell].state == "not-clicked") return cells[cell];
-    }
-
-    function detectShotWithMaxWeight(potentialShots) {
-        var max = potentialShots.reduce(function (a, b) {
-            return a.weight > b.weight ? a : b;
-        });
-        return max.id;
     }
 };
 $(document).ready(function () {
@@ -136,19 +109,97 @@ $(document).ready(function () {
     game.init();
 
     $('.game-user').click(function () {
-        game.players(this.id);
+        game.setPlayers(this.id);
         $('.choose-user').hide(250);
     });
 
     $('.table-cell').click(function () {
-        $(this).text(game.human.name);
-        game.play(game.human.name, this.id);
+        $(this).text(game.getHuman());
+        game.play(this.id);
+    });
+    $('.game-refresh').click(function () {
+        location.reload();
     });
 });
 var Player = {
-    progress: [],
-    shot: function (cell) {
-        this.progress.push(parseInt(cell));
-        return this.progress;
+    init: function (name, winningCombinations, player) {
+        this.name = name;
+        this.player = player;
+        this.progress = function (combinations) {
+            var _progress = [];
+            for (var i = 0; i < combinations.length; i++) {
+                var currentCombination = combinations[i],
+                    progressCombination = {};
+                for (var j = 0; j < currentCombination.length; j++) {
+                    progressCombination[currentCombination[j]] = "not-clicked";
+                }
+                _progress.push({ count: 0, combination: progressCombination });
+            }
+            return _progress;
+        }(winningCombinations);
+    },
+
+    analyze: function (progress, cellsWeight) {
+        var countAndIndex = checkCount(progress);
+
+        if (countAndIndex.count == 2) {
+            return countAndIndex.potentialShots;
+        } else {
+            var bestShot = detectShotWithMaxWeight(countAndIndex.potentialShots);
+            return bestShot.cellId;
+        }
+
+        function checkCount(progress) {
+            var potentialShots = [];
+
+            for (var i = 0; i < progress.length; i++) {
+                if (progress[i].count == 2) {
+                    for (var key in progress[i].combination) {
+                        if (progress[i].combination[key] == "not-clicked") {
+                            return { count: 2, potentialShots: key };
+                        }
+                    }
+                }
+            }
+            for (var j = 0; j < progress.length; j++) {
+                if (progress[j].count == 1) {
+                    for (var key in progress[j].combination) {
+                        if (progress[j].combination[key] == "not-clicked") {
+                            potentialShots.push({
+                                cellId: cellsWeight[Number(key)].id,
+                                cellWeight: cellsWeight[Number(key)].weight
+                            });
+                        }
+                    }
+                }
+            }
+            return { count: 1, potentialShots: potentialShots };
+        }
+
+        function detectShotWithMaxWeight(potentialShots) {
+            return potentialShots.reduce(function (a, b) {
+                return a.cellWeight > b.cellWeight ? a : b;
+            });
+        }
+    },
+
+    shot: function (cellId, progress) {
+        this.hit(cellId, progress, this.name);
+        return cellId;
+    },
+
+    hit: function (cellId, progress, name) {
+        this.progress = progress;
+
+        for (var i = 0; i < this.progress.length; i++) {
+            for (var key in this.progress[i].combination) {
+                if (key == Number(cellId)) {
+                    this.progress[i].combination[key] = name;
+                    if (this.player == "human") {
+                        this.progress[i].count++;
+                    }
+                }
+            }
+        }
     }
 };

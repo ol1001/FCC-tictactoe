@@ -11,4 +11,10 @@ $(document).ready(function () {
         $(this).text(game.getHuman());
         game.play(this.id);
     });
+    $('.game-refresh').click(function () {
+        location.reload();
+    });
 });
+
+
+
